@@ -37,6 +37,7 @@ int CompilerProgram::handle_flag(const std::string &given_flag) {
 }
 
 bool is_flag(const std::string &arg) {
+    if (arg.length() > 1 && std::isdigit(arg[1])) return false;
     return arg.starts_with("-");
 }
 
@@ -53,7 +54,7 @@ const std::unordered_map<Tokeniser::TokenType, std::string> token_to_string = {
     {Tokeniser::TokenType::RIGHT_PARENTHESIS, "RIGHT_PARENTHESIS"}
 };
 
-int CompilerProgram::main(std::vector<std::string> args) {
+int CompilerProgram::main(std::vector<std::string> args_flags) {
 
     mode = FILE;
     FLAGS = {
@@ -69,11 +70,14 @@ int CompilerProgram::main(std::vector<std::string> args) {
         {'d', "debug"}
     };
 
-    for (const auto [i, arg] : std::views::enumerate(args)) {
+    std::vector<std::string> args;
+
+    for (const auto [i, arg] : std::views::enumerate(args_flags)) {
         if (is_flag(arg)) {
-            int result = handle_flag(arg);
-            args.erase(args.begin() + i);
-            if (result == 1) return 1;
+            if (int result = handle_flag(arg); result == 1) return 1;
+        }
+        else {
+            args.push_back(arg);
         }
     }
 

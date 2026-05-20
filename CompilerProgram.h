@@ -31,7 +31,7 @@ public:
     static inline bool debug_mode = false;
 
     static int handle_flag(const std::string &given_flag);
-    static int main(std::vector<std::string> args);
+    static int main(std::vector<std::string> args_flags);
 
 };
 

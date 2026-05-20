@@ -29,6 +29,9 @@ public:
 
 private:
 
+    const static inline std::vector<char> OP_SYMBOLS = {'+', '-', '/', '*', '^'};
+    static bool is_operator(char character);
+
     std::string input;
 
     std::vector<Token> tokens;

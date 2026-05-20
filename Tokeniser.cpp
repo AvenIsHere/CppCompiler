@@ -13,9 +13,7 @@ Tokeniser::Tokeniser(const std::string &input_string) {
     tokenise();
 }
 
-const std::vector OP_SYMBOLS = {'+', '-', '/', '*', '^'};
-
-bool is_operator(const char character) {
+bool Tokeniser::is_operator(const char character) {
     return std::ranges::count(OP_SYMBOLS, character) > 0;
 }
 
