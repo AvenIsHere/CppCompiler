@@ -59,12 +59,14 @@ int CompilerProgram::main(std::vector<std::string> args) {
     FLAGS = {
         {"help", []{std::cout << HELP_MSG << std::endl;}},
         {"string", []{mode = STRING;}},
-        {"file", []{mode = FILE;}}
+        {"file", []{mode = FILE;}},
+        {"debug", [] {debug_mode = true;}}
     };
     SHORT_FLAGS = {
         {'h', "help"},
         {'f', "file"},
-        {'s', "string"}
+        {'s', "string"},
+        {'d', "debug"}
     };
 
     for (const auto [i, arg] : std::views::enumerate(args)) {
@@ -102,8 +104,10 @@ int CompilerProgram::main(std::vector<std::string> args) {
     auto tokeniser = Tokeniser(input);
     std::vector<Tokeniser::Token> output = tokeniser.get_tokens();
 
-    for (const auto& token : output) {
-        std::cout << "{" << token_to_string.at(token.token) << ", \"" << token.value << "\"}" << std::endl;
+    if (debug_mode) {
+        for (const auto&[token, value] : output) {
+            std::cout << "{" << token_to_string.at(token) << ", \"" << value << "\"}" << std::endl;
+        }
     }
 
     return 0;

@@ -28,6 +28,7 @@ public:
     static std::unordered_map<char, std::string> SHORT_FLAGS;
 
     static Mode mode;
+    static inline bool debug_mode = false;
 
     static int handle_flag(const std::string &given_flag);
     static int main(std::vector<std::string> args);
