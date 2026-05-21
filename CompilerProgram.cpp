@@ -30,7 +30,7 @@ int CompilerProgram::handle_flag(const std::string &given_flag) {
         FLAGS.at(SHORT_FLAGS.at(flag_content.at(0)))();
         return 0;
     }
-    std::cerr << "flag \"" << flag_content << "\" not in :" << std::endl;
+    std::cerr << "flag \"" << flag_content << "\" not in:" << std::endl;
     for (const auto &flag: FLAGS | std::views::keys) std::cerr << flag << ", ";
     std::cerr << std::endl;
     return 1;
@@ -73,12 +73,8 @@ int CompilerProgram::main(std::vector<std::string> args_flags) {
     std::vector<std::string> args;
 
     for (const auto [i, arg] : std::views::enumerate(args_flags)) {
-        if (is_flag(arg)) {
-            if (int result = handle_flag(arg); result == 1) return 1;
-        }
-        else {
-            args.push_back(arg);
-        }
+        if (!is_flag(arg)) args.push_back(arg);
+        else if (handle_flag(arg) == 1) return 1;
     }
 
     if (args.size() > 1) {
@@ -86,7 +82,7 @@ int CompilerProgram::main(std::vector<std::string> args_flags) {
         return 1;
     }
 
-    if (args.size() == 0) {
+    if (args.empty()) {
         std::cerr << "No filename given." << std::endl;
         return 1;
     }

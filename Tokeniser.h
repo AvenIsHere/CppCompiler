@@ -2,8 +2,8 @@
 // Created by aven on 19/05/2026.
 //
 
-#ifndef CPPCOMPILER_PARSER_H
-#define CPPCOMPILER_PARSER_H
+#ifndef CPPCOMPILER_TOKENISER_H
+#define CPPCOMPILER_TOKENISER_H
 #include <string>
 #include <vector>
 
@@ -45,4 +45,4 @@ private:
 };
 
 
-#endif //CPPCOMPILER_PARSER_H
+#endif //CPPCOMPILER_TOKENISER_H
