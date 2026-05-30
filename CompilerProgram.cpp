@@ -11,10 +11,28 @@
 
 #include "Tokeniser.h"
 
-std::unordered_map<std::string, std::function<void()>> CompilerProgram::FLAGS;
-std::unordered_map<char, std::string> CompilerProgram::SHORT_FLAGS;
+CompilerProgram::CompilerProgram(std::vector<std::string> args_flags) {
 
-CompilerProgram::Mode CompilerProgram::mode;
+    mode = FILE;
+    FLAGS = {
+        {"help", []{std::cout << HELP_MSG << std::endl;}},
+        {"string", [this]{mode = STRING;}},
+        {"file", [this]{mode = FILE;}},
+        {"debug", [this] {debug_mode = true;}}
+    };
+    SHORT_FLAGS = {
+        {'h', "help"},
+        {'f', "file"},
+        {'s', "string"},
+        {'d', "debug"}
+    };
+
+    for (const auto [i, arg] : std::views::enumerate(args_flags)) {
+        if (!is_flag(arg)) args.push_back(arg);
+        else handle_flag(arg);
+    }
+
+}
 
 int CompilerProgram::handle_flag(const std::string &given_flag) {
     auto flag_content = given_flag.substr(1);
@@ -36,7 +54,7 @@ int CompilerProgram::handle_flag(const std::string &given_flag) {
     return 1;
 }
 
-bool is_flag(const std::string &arg) {
+bool CompilerProgram::is_flag(const std::string &arg) {
     if (arg.length() > 1 && std::isdigit(arg[1])) return false;
     return arg.starts_with("-");
 }
@@ -51,31 +69,13 @@ const std::unordered_map<Tokeniser::TokenType, std::string> token_to_string = {
     {Tokeniser::TokenType::NUM, "NUM"},
     {Tokeniser::TokenType::OPERATOR, "OPERATOR"},
     {Tokeniser::TokenType::LEFT_PARENTHESIS, "LEFT_PARENTHESIS"},
-    {Tokeniser::TokenType::RIGHT_PARENTHESIS, "RIGHT_PARENTHESIS"}
+    {Tokeniser::TokenType::RIGHT_PARENTHESIS, "RIGHT_PARENTHESIS"},
+    {Tokeniser::TokenType::EQUALITY, "EQUALITY"},
+    {Tokeniser::TokenType::IDENTITY, "IDENTITY"},
+    {Tokeniser::TokenType::KEYWORD, "KEYWORD"}
 };
 
-int CompilerProgram::main(std::vector<std::string> args_flags) {
-
-    mode = FILE;
-    FLAGS = {
-        {"help", []{std::cout << HELP_MSG << std::endl;}},
-        {"string", []{mode = STRING;}},
-        {"file", []{mode = FILE;}},
-        {"debug", [] {debug_mode = true;}}
-    };
-    SHORT_FLAGS = {
-        {'h', "help"},
-        {'f', "file"},
-        {'s', "string"},
-        {'d', "debug"}
-    };
-
-    std::vector<std::string> args;
-
-    for (const auto [i, arg] : std::views::enumerate(args_flags)) {
-        if (!is_flag(arg)) args.push_back(arg);
-        else if (handle_flag(arg) == 1) return 1;
-    }
+int CompilerProgram::run() const {
 
     if (args.size() > 1) {
         std::cerr << "Too many arguments. Did you forget a -?" << std::endl;

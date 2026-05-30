@@ -7,4 +7,6 @@ add_executable(CppCompiler main.cpp
         Tokeniser.cpp
         Tokeniser.h
         CompilerProgram.cpp
-        CompilerProgram.h)
+        CompilerProgram.h
+        Parser.cpp
+        Parser.h)

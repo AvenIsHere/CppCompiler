@@ -11,7 +11,12 @@
 
 
 class CompilerProgram {
+
+    std::vector<std::string> args;
+
 public:
+
+    CompilerProgram(std::vector<std::string> args_flags);
 
     enum Mode {
         FILE,
@@ -24,14 +29,16 @@ public:
         "cppcompiler [FILENAME] -[short flags] --[flags]\n"
     };
 
-    static std::unordered_map<std::string, std::function<void()>> FLAGS;
-    static std::unordered_map<char, std::string> SHORT_FLAGS;
+    std::unordered_map<std::string, std::function<void()>> FLAGS;
+    std::unordered_map<char, std::string> SHORT_FLAGS;
 
-    static Mode mode;
-    static inline bool debug_mode = false;
+    Mode mode;
+    bool debug_mode = false;
 
-    static int handle_flag(const std::string &given_flag);
-    static int main(std::vector<std::string> args_flags);
+    int handle_flag(const std::string &given_flag);
+    static bool is_flag(const std::string &arg);
+
+    int run() const;
 
 };
 

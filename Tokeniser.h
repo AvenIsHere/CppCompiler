@@ -15,8 +15,11 @@ public:
     enum TokenType {
         NUM,
         OPERATOR,
+        EQUALITY,
         LEFT_PARENTHESIS,
         RIGHT_PARENTHESIS,
+        IDENTITY,
+        KEYWORD,
     };
 
     struct Token {
@@ -29,14 +32,41 @@ public:
 
 private:
 
-    const static inline std::vector<char> OP_SYMBOLS = {'+', '-', '/', '*', '^'};
-    static bool is_operator(char character);
+    const static inline std::vector<std::string> KEYWORDS = {
+        "int",
+        "char",
+        "short",
+        "long",
+        "float",
+        "double",
+        "wchar_t",
+        "char8_t",
+        "char16_t",
+        "char32_t",
+        "bool",
+    };
+
+    const static inline std::vector<char> OP_SYMBOLS = {
+        '+',
+        '-',
+        '/',
+        '*',
+        '^'
+    };
+
+    template <typename T>
+    static bool in_list(std::vector<T> list, T item);
+
+    static bool is_ident_char(char given_char);
+    static bool is_ident(const std::string &word);
 
     std::string input;
 
     std::vector<Token> tokens;
     std::string current_word;
     TokenType current_token_type;
+
+    void new_word();
 
     std::vector<Token> tokenise();
 
