@@ -9,4 +9,7 @@ add_executable(CppCompiler main.cpp
         CompilerProgram.cpp
         CompilerProgram.h
         Parser.cpp
-        Parser.h)
+        Parser.h
+        Token.cpp
+        Token.h
+        TokenType.h)

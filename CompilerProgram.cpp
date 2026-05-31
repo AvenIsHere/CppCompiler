@@ -9,6 +9,7 @@
 #include <ranges>
 #include <sstream>
 
+#include "Token.h"
 #include "Tokeniser.h"
 
 CompilerProgram::CompilerProgram(std::vector<std::string> args_flags) {
@@ -65,16 +66,6 @@ std::string file_to_string(std::fstream file) {
     return file_stream.str();
 }
 
-const std::unordered_map<Tokeniser::TokenType, std::string> token_to_string = {
-    {Tokeniser::TokenType::NUM, "NUM"},
-    {Tokeniser::TokenType::OPERATOR, "OPERATOR"},
-    {Tokeniser::TokenType::LEFT_PARENTHESIS, "LEFT_PARENTHESIS"},
-    {Tokeniser::TokenType::RIGHT_PARENTHESIS, "RIGHT_PARENTHESIS"},
-    {Tokeniser::TokenType::EQUALITY, "EQUALITY"},
-    {Tokeniser::TokenType::IDENTITY, "IDENTITY"},
-    {Tokeniser::TokenType::KEYWORD, "KEYWORD"}
-};
-
 int CompilerProgram::run() const {
 
     if (args.size() > 1) {
@@ -102,11 +93,11 @@ int CompilerProgram::run() const {
     }
 
     auto tokeniser = Tokeniser(input);
-    std::vector<Tokeniser::Token> output = tokeniser.get_tokens();
+    std::vector<Token> output = tokeniser.get_tokens();
 
     if (debug_mode) {
         for (const auto&[token, value] : output) {
-            std::cout << "{" << token_to_string.at(token) << ", \"" << value << "\"}" << std::endl;
+            std::cout << "{" << Token::type_to_string(token) << ", \"" << value << "\"}" << std::endl;
         }
     }
 
