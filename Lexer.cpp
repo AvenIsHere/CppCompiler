@@ -6,8 +6,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cctype>
 #include <format>
 #include <ranges>
+#include <string>
 #include <utility>
 
 Lexer::Lexer(std::string input_string) : input(std::move(input_string)), input_pos(0), current_token_type(TokenType::UNKNOWN), line(1), column(1) {
@@ -155,6 +157,7 @@ void Lexer::lex_char_literal() {
     current_token_type = TokenType::CHAR_LIT;
     next_character();
     if (character == 0) throw std::runtime_error(std::format("Unterminated character literal at {}:{}", line, column));
+    if (character == '\'') throw std::runtime_error(std::format("Empty character literal at {}:{}", line, column));
     auto final_char = character;
     if (character == '\\') final_char = get_escaped_char();
     current_word.push_back(static_cast<char>(final_char));
@@ -175,7 +178,7 @@ std::optional<TokenType> Lexer::starts_pattern(const unsigned char given_charact
 bool Lexer::ends_pattern(const unsigned char given_character) const {
     if (current_token_type == TokenType::STR_LIT && given_character == '\"') return true;
     if (current_token_type == TokenType::CHAR_LIT && given_character == '\'') return true;
-    if ((current_token_type == TokenType::INT || current_token_type == TokenType::FLOAT) && !(isdigit(given_character) || given_character == '.')) return true;
+    if ((current_token_type == TokenType::INT || current_token_type == TokenType::FLOAT) && !(std::isdigit(given_character) || given_character == '.')) return true;
     if (current_token_type == TokenType::IDENTIFIER && !is_ident_char(given_character)) return true;
     return false;
 }

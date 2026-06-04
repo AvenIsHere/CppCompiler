@@ -42,15 +42,16 @@ bool CompilerProgram::is_double_flag(const std::string &given_flag) {
 }
 
 int CompilerProgram::handle_flag(const std::string &given_flag) {
-    auto flag_content = given_flag.substr(1);
     if (given_flag.starts_with("--")) {
-        flag_content = given_flag.substr(2);
+        const auto flag_content = given_flag.substr(2);
         if (FLAGS.contains(flag_content)) {
             FLAGS.at(flag_content)();
             return 0;
         }
-        flag_content.erase(0);
+        std::cerr << "unknown flag \"--" << flag_content << "\"" << std::endl;
+        throw std::runtime_error("unknown flag: --" + flag_content);
     }
+    const auto flag_content = given_flag.substr(1);
     std::string unknown_flags;
 
     for (const auto& character : flag_content) {
@@ -62,13 +63,15 @@ int CompilerProgram::handle_flag(const std::string &given_flag) {
     }
     if (unknown_flags.empty()) return 0;
     std::cerr << "unknown flag(s) \"" << unknown_flags << "\"" << std::endl;
-    for (const auto &flag: SHORT_FLAGS | std::views::keys) std::cerr << flag << ", ";
+    std::cerr << "Allowed flags: ";
+    for (const auto &flag: SHORT_FLAGS | std::views::keys) std::cerr << "-" << flag << ", ";
+    for (const auto &flag: FLAGS | std::views::keys) std::cerr << "--" << flag << ", ";
     std::cerr << std::endl;
-    return 1;
+    throw std::runtime_error("unknown short flag(s): " + unknown_flags);
 }
 
 bool CompilerProgram::is_flag(const std::string &arg) {
-    if (arg.length() > 1 && std::isdigit(arg[1])) return false;
+    if (arg.length() > 1 && std::isdigit(static_cast<unsigned char>(arg[1]))) return false;
     return arg.starts_with("-");
 }
 

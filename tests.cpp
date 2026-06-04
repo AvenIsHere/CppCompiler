@@ -21,24 +21,24 @@ void test_lexer(const std::string& name, const std::string& input) {
 }
 
 int main() {
-    // 1. EOF crash/OOB test
+    // EOF crash/OOB test
     test_lexer("Empty string", "");
     test_lexer("Single char", "a");
 
-    // 2. String literal consumption test
+    // String literal consumption test
     test_lexer("String literal followed by char", "\"hello\"+");
 
-    // 3. Operator consumption test
+    // Operator consumption test
     test_lexer("Operator + ident", "++a");
 
-    // 4. Multi-char operator
+    // Multi-char operator
     test_lexer("Multi-char operator", "==");
 
-    // 5. OOB check
+    // OOB check
     test_lexer("End of string check", "123");
     test_lexer("Two words", "abc def");
 
-    // 6. Escape sequence at EOF
+    // Escape sequence at EOF
     test_lexer("Escape at EOF", "\"\\");
 
     // multiple decimal points in float
@@ -49,6 +49,15 @@ int main() {
 
     // Full function
     test_lexer("Full function", "void main() { int x = 5; printf(\"%s\", x); }");
+
+    // 7. Lost characters in operators
+    test_lexer("Lost characters", "+-");
+
+    // 8. Char literals
+    test_lexer("Empty char literal", "''");
+    test_lexer("Triple quote char literal", "'''");
+    test_lexer("Valid char literal", "'a'");
+    test_lexer("Escaped char literal", "'\\''");
 
     return 0;
 }
