@@ -45,7 +45,7 @@ private:
     void submit_token();
 
     [[nodiscard]] static bool starts_operator(unsigned char character);
-    void lex_operator();
+    bool lex_operator();
 
     [[nodiscard]] static bool can_start_ident(unsigned char given_character);
     [[nodiscard]] static bool is_ident_char(unsigned char given_character);
