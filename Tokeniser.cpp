@@ -120,29 +120,29 @@ std::vector<Token> Tokeniser::tokenise() {
         }
         if (character == ';') {
             new_word();
-            tokens.emplace_back(SEMI_COLON, std::string(1, character));
+            tokens.emplace_back(TokenType::SEMI_COLON, std::string(1, character));
             continue;
         }
         if (current_word.empty() && can_start_ident(character) ||
             (is_ident_char(character) && is_ident(current_word))) {
-            current_token_type = IDENTIFIER;
+            current_token_type = TokenType::IDENTIFIER;
             current_word.push_back(character);
             continue;
         }
         if (isdigit(character)) {
             if (!current_word.empty() && !isdigit(current_word.back())) new_word();
-            current_token_type = NUM;
+            current_token_type = TokenType::NUM;
             current_word.push_back(character);
             continue;
         }
         if (character == '(') {
             new_word();
-            tokens.emplace_back(LEFT_PARENTHESIS, std::string(1, character));
+            tokens.emplace_back(TokenType::LEFT_PARENTHESIS, std::string(1, character));
             continue;
         }
         if (character == ')') {
             new_word();
-            tokens.emplace_back(RIGHT_PARENTHESIS, std::string(1, character));
+            tokens.emplace_back(TokenType::RIGHT_PARENTHESIS, std::string(1, character));
             continue;
         }
         error_at(character, line, column);

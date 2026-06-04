@@ -11,15 +11,16 @@ Token::Token(const TokenType given_type, const std::string &given_value) {
 
 std::string Token::type_to_string(const TokenType given_type) {
     switch (given_type) {
-        case NUM: return "NUM";
-        case LEFT_PARENTHESIS: return "LEFT_PARENTHESIS";
-        case RIGHT_PARENTHESIS: return "RIGHT_PARENTHESIS";
-        case IDENTIFIER: return "IDENTIFIER";
-        case SEMI_COLON: return "SEMI_COLON";
-        #define OPERATOR_DEF(str, token, cat) case token: return #token;
+        #define PATTERN_DEF(token, cat) case TokenType::token: return #token;
+        PATTERN_LIST
+        #undef PATTERN_DEF
+        #define PUNCT_DEF(str, token, cat) case TokenType::token: return #token;
+        PUNCT_LIST
+        #undef PUNCT_DEF
+        #define OPERATOR_DEF(str, token, cat) case TokenType::token: return #token;
         OPERATOR_LIST
         #undef OPERATOR_DEF
-        #define KEYWORD_DEF(str, token, cat) case token: return #token;
+        #define KEYWORD_DEF(str, token, cat) case TokenType::token: return #token;
         KEYWORD_LIST
         #undef KEYWORD_DEF
     }

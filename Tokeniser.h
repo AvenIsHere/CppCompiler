@@ -21,13 +21,13 @@ public:
 private:
 
     const static inline std::vector<Token> KEYWORDS = {
-        #define KEYWORD_DEF(str, token, cat) {token, str},
+        #define KEYWORD_DEF(str, token, cat) {TokenType::token, str},
         KEYWORD_LIST
         #undef KEYWORD_DEF
     };
 
     const static inline std::vector<Token> OPERATORS = {
-        #define OPERATOR_DEF(str, token, cat) {token, str},
+        #define OPERATOR_DEF(str, token, cat) {TokenType::token, str},
         OPERATOR_LIST
         #undef OPERATOR_DEF
     };
