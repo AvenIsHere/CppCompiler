@@ -11,11 +11,11 @@
 #include "Token.h"
 #include "TokenType.h"
 
-class Tokeniser {
+class Lexer {
 
 public:
 
-    explicit Tokeniser(const std::string &input_string);
+    explicit Lexer(const std::string &input_string);
     std::vector<Token> get_tokens();
 
 private:
@@ -54,8 +54,8 @@ private:
     std::string current_word;
     TokenType current_token_type;
 
-    int line;
-    int column;
+    size_t line;
+    size_t column;
 
     void new_word();
 

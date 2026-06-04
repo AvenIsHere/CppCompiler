@@ -10,7 +10,7 @@
 #include <sstream>
 
 #include "Token.h"
-#include "Tokeniser.h"
+#include "Lexer.h"
 
 CompilerProgram::CompilerProgram(std::vector<std::string> args_flags) {
 
@@ -35,6 +35,12 @@ CompilerProgram::CompilerProgram(std::vector<std::string> args_flags) {
 
 }
 
+bool CompilerProgram::is_double_flag(const std::string &given_flag) {
+    if (given_flag.starts_with("--")) return true;
+    if (!given_flag.starts_with("-")) throw std::logic_error("non-flag treated as flag.");
+    return false;
+}
+
 int CompilerProgram::handle_flag(const std::string &given_flag) {
     auto flag_content = given_flag.substr(1);
     if (given_flag.starts_with("--")) {
@@ -45,12 +51,18 @@ int CompilerProgram::handle_flag(const std::string &given_flag) {
         }
         flag_content.erase(0);
     }
-    if (flag_content.length() == 1 && SHORT_FLAGS.contains(flag_content.at(0))) {
-        FLAGS.at(SHORT_FLAGS.at(flag_content.at(0)))();
-        return 0;
+    std::string unknown_flags;
+
+    for (const auto& character : flag_content) {
+        if (SHORT_FLAGS.contains(character)) {
+            FLAGS.at(SHORT_FLAGS.at(character))();
+            continue;
+        }
+        unknown_flags.push_back(character);
     }
-    std::cerr << "flag \"" << flag_content << "\" not in:" << std::endl;
-    for (const auto &flag: FLAGS | std::views::keys) std::cerr << flag << ", ";
+    if (unknown_flags.empty()) return 0;
+    std::cerr << "unknown flag(s) \"" << unknown_flags << "\"" << std::endl;
+    for (const auto &flag: SHORT_FLAGS | std::views::keys) std::cerr << flag << ", ";
     std::cerr << std::endl;
     return 1;
 }
@@ -92,7 +104,7 @@ int CompilerProgram::run() const {
         }
     }
 
-    auto tokeniser = Tokeniser(input);
+    auto tokeniser = Lexer(input);
     std::vector<Token> output = tokeniser.get_tokens();
 
     if (debug_mode) {

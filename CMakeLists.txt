@@ -4,8 +4,8 @@ project(CppCompiler)
 set(CMAKE_CXX_STANDARD 23)
 
 add_executable(CppCompiler main.cpp
-        Tokeniser.cpp
-        Tokeniser.h
+        Lexer.cpp
+        Lexer.h
         CompilerProgram.cpp
         CompilerProgram.h
         Parser.cpp
