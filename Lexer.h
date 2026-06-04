@@ -41,13 +41,14 @@ private:
         #undef PUNCT_DEF
     };
 
+    bool skip_comment();
+    bool lex_punctuation();
+
     void next_character();
     void submit_token();
 
-    [[nodiscard]] static bool starts_operator(unsigned char character);
     bool lex_operator();
 
-    [[nodiscard]] static bool can_start_ident(unsigned char given_character);
     [[nodiscard]] static bool is_ident_char(unsigned char given_character);
     void check_keyword();
     void lex_ident();
@@ -58,7 +59,7 @@ private:
     void lex_string_literal();
     void lex_char_literal();
 
-    static std::optional<TokenType> starts_pattern(unsigned char given_character);
+    [[nodiscard]] std::optional<TokenType> starts_pattern(unsigned char given_character) const;
     [[nodiscard]] bool ends_pattern(unsigned char given_character) const;
 
     std::string input;

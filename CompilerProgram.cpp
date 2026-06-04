@@ -75,7 +75,7 @@ bool CompilerProgram::is_flag(const std::string &arg) {
     return arg.starts_with("-");
 }
 
-std::string file_to_string(std::fstream file) {
+std::string file_to_string(std::fstream& file) {
     std::ostringstream file_stream;
     file_stream << file.rdbuf();
     return file_stream.str();
@@ -98,7 +98,11 @@ int CompilerProgram::run() const {
     switch (mode) {
         case FILE: {
             std::fstream file(args[0], std::ios::in);
-            input = file_to_string(std::move(file));
+            if (!file.is_open()) {
+                std::cerr << "Could not open file: " << args[0] << std::endl;
+                return 1;
+            }
+            input = file_to_string(file);
             break;
         }
         case STRING: {

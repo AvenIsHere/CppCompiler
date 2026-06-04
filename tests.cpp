@@ -59,5 +59,12 @@ int main() {
     test_lexer("Valid char literal", "'a'");
     test_lexer("Escaped char literal", "'\\''");
 
+    // 9. Floating point starting with dot
+    test_lexer("Floating point with dot", ".5");
+
+    // 10. Comments
+    test_lexer("Single line comment", "int x; // comment\nint y;");
+    test_lexer("Multi-line comment", "int x; /* comment */ int y;");
+
     return 0;
 }

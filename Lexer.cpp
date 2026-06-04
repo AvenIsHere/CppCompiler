@@ -38,23 +38,17 @@ void Lexer::submit_token() {
     current_word.clear();
 }
 
-bool Lexer::starts_operator(unsigned char character) {
-    return std::ranges::any_of(OPERATORS, [character](const auto& token) {
-        return !token.first.empty() && static_cast<unsigned char>(token.first[0]) == character;
-    });
-}
 
 bool Lexer::lex_operator() {
     auto last_valid_match = OPERATORS.end();
     const std::string_view remaining_input = std::string_view(input).substr(input_pos);
     for (size_t op_len = 1; op_len <= remaining_input.length(); op_len++) {
-        std::string_view op = remaining_input.substr(0, op_len);
-        auto match = std::ranges::find_if(OPERATORS, [op](const auto& token) {
-            return token.first == op;
-        });
+        std::string op(remaining_input.substr(0, op_len));
+        auto match = OPERATORS.find(op);
         if (match != OPERATORS.end()) last_valid_match = match;
-        const bool any_prefix = std::ranges::any_of(OPERATORS, [op](const auto& token) {
-            return std::string_view(token.first).starts_with(op);
+        
+        const bool any_prefix = std::ranges::any_of(OPERATORS, [&op](const auto& token) {
+            return token.first.starts_with(op);
         });
         if (!any_prefix) break;
     }
@@ -66,9 +60,6 @@ bool Lexer::lex_operator() {
     return true;
 }
 
-bool Lexer::can_start_ident(const unsigned char given_character) {
-    return std::isalpha(given_character) || given_character == '_';
-}
 
 bool Lexer::is_ident_char(const unsigned char given_character) {
     return std::isalnum(given_character) || given_character == '_';
@@ -167,10 +158,15 @@ void Lexer::lex_char_literal() {
     submit_token();
 }
 
-std::optional<TokenType> Lexer::starts_pattern(const unsigned char given_character) {
+std::optional<TokenType> Lexer::starts_pattern(const unsigned char given_character) const {
     if (given_character == '\"') return TokenType::STR_LIT;
     if (given_character == '\'') return TokenType::CHAR_LIT;
     if (std::isdigit(given_character)) return TokenType::INT;
+    if (given_character == '.') {
+        if (input_pos + 1 < input.length() && std::isdigit(static_cast<unsigned char>(input[input_pos + 1]))) {
+            return TokenType::FLOAT;
+        }
+    }
     if (std::isalpha(given_character) || given_character == '_') return TokenType::IDENTIFIER;
     return std::nullopt;
 }
@@ -189,40 +185,69 @@ void error_at(const unsigned char character, const size_t line, const size_t col
         std::to_string(line) + std::string(":") + std::to_string(column));
 }
 
+bool Lexer::skip_comment() {
+    if (character != '/' || input_pos + 1 >= input.length()) return false;
+
+    if (input[input_pos + 1] == '/') {
+        while (character != 0 && character != '\n') next_character();
+        return true;
+    }
+
+    if (input[input_pos + 1] == '*') {
+        bool closed = false;
+        next_character(); // /
+        next_character(); // *
+        while (character != 0) {
+            if (character == '*') {
+                next_character();
+                if (character == '/') {
+                    next_character();
+                    closed = true;
+                    break;
+                }
+                continue;
+            }
+            next_character();
+        }
+        if (!closed) throw std::runtime_error(std::format("Unterminated multi-line comment at {}:{}", line, column));
+        return true;
+    }
+
+    return false;
+}
+
+bool Lexer::lex_punctuation() {
+    const std::string char_str(1, static_cast<char>(character));
+    if (const auto it = PUNCTUATION.find(char_str); it != PUNCTUATION.end()) {
+        current_token_type = it->second;
+        current_word = char_str;
+        next_character();
+        submit_token();
+        return true;
+    }
+    return false;
+}
+
 void Lexer::tokenise() {
-    while (input_pos < input.length()) {
-        if (character == 0) break;
+    while (input_pos < input.length() && character != 0) {
         if (std::isspace(character)) {
             next_character();
             continue;
         }
-        if (starts_operator(character)) {
-            if (lex_operator()) continue;
-        }
-        if (const auto char_str = std::string(1, static_cast<char>(character)); PUNCTUATION.contains(char_str)) {
-            current_token_type = PUNCTUATION.at(char_str);
-            current_word.push_back(static_cast<char>(character));
-            next_character();
-            submit_token();
+
+        if (skip_comment()) continue;
+
+        if (const auto pattern = starts_pattern(character)) {
+            if (*pattern == TokenType::STR_LIT) lex_string_literal();
+            else if (*pattern == TokenType::CHAR_LIT) lex_char_literal();
+            else if (*pattern == TokenType::INT || *pattern == TokenType::FLOAT) lex_number();
+            else if (*pattern == TokenType::IDENTIFIER) lex_ident();
             continue;
         }
-        auto pattern = starts_pattern(character);
-        if (pattern == TokenType::STR_LIT) {
-            lex_string_literal();
-            continue;
-        }
-        if (pattern == TokenType::CHAR_LIT) {
-            lex_char_literal();
-            continue;
-        }
-        if (pattern == TokenType::INT) {
-            lex_number();
-            continue;
-        }
-        if (pattern == TokenType::IDENTIFIER) {
-            lex_ident();
-            continue;
-        }
+
+        if (lex_operator()) continue;
+        if (lex_punctuation()) continue;
+
         error_at(character, line, column);
     }
 }
