@@ -5,88 +5,103 @@
 #include "Lexer.h"
 
 #include <algorithm>
+#include <cassert>
 #include <ranges>
+#include <utility>
 
-Lexer::Lexer(const std::string &input_string) {
-    input = input_string;
-    current_token_type = {};
-    line = 1;
-    column = 0;
+Lexer::Lexer(std::string input_string) : input(std::move(input_string)), input_pos(0), current_token_type(TokenType::UNKNOWN), line(1), column(0) {
+    character = static_cast<unsigned char>(input[0]);
     tokenise();
 }
 
-bool Lexer::can_start_ident(const char given_char) {
-    return isalpha(given_char) || given_char == '_';
+void Lexer::next_character() {
+    input_pos++;
+    column++;
+    if (character == '\n') column = 0;
+    character = static_cast<unsigned char>(input[input_pos]);
 }
 
-bool Lexer::is_ident_char(const char given_char) {
-    return isalnum(given_char) || given_char == '_';
-}
-
-bool Lexer::is_ident(const std::string &word) {
-    if (word.empty()) return false;
-    if (!can_start_ident(word[0])) return false;
-    for (int i = 1; i < word.length(); i++) {
-        if (!is_ident_char(word[i])) return false;
-    }
-    return true;
-}
-
-
-
-bool Lexer::is_token_type(const std::vector<Token>& token_vec, TokenType type) {
-    return std::ranges::any_of(token_vec.begin(), token_vec.end(), [&type](const auto& pair) {
-        const auto& [ token, value ] = pair;
-        return type == token;
-    });
-}
-
-std::optional<TokenType> Lexer::is_specific_token(const std::vector<Token>& token_vec, const std::string &word) {
-    for (const auto& [token, value] : token_vec) {
-        if (word == value) return token;
-    }
-    return std::nullopt;
-}
-
-std::vector<Token> Lexer::get_possible_tokens(const std::vector<Token> &token_vec, const std::string &word) {
-    std::vector<Token> return_tokens;
-    for (const auto& token : token_vec) {
-        if (token.value.starts_with(word)) return_tokens.push_back(token);
-    }
-    return return_tokens;
-}
-
-bool Lexer::is_operator_char(char given_char) {
-    return std::ranges::any_of(OPERATORS.begin(), OPERATORS.end(), [&given_char](const auto& op) {
-        const auto& [token, value] = op;
-        return value[0] == given_char;
-    });
-}
-
-std::optional<Token> Lexer::get_operator(const size_t pos) const {
-    std::string current_op(1, input[pos]);
-    size_t current_pos = pos;
-    std::vector<Token> possible_tokens = get_possible_tokens(OPERATORS, current_op);
-    if (possible_tokens.empty()) return std::nullopt;
-    while (possible_tokens.size() > 1) {
-        current_pos++;
-        current_op.push_back(input[current_pos]);
-        possible_tokens = get_possible_tokens(OPERATORS, current_op);
-    }
-    if (possible_tokens.empty()) {
-        current_op.pop_back();
-        possible_tokens = get_possible_tokens(OPERATORS, current_op);
-        if (possible_tokens.empty()) return std::nullopt;
-    }
-    if (possible_tokens[0].value == current_op) return possible_tokens[0];
-    return std::nullopt;
-}
-
-void Lexer::new_word() {
-    if (const auto keyword = is_specific_token(KEYWORDS, current_word); keyword != std::nullopt)
-        current_token_type = keyword.value();
-    if (!current_word.empty()) tokens.emplace_back(current_token_type, current_word);
+void Lexer::submit_token() {
+    tokens.emplace_back(current_token_type, current_word);
+    current_token_type = TokenType::UNKNOWN;
     current_word.clear();
+}
+
+bool Lexer::starts_operator(unsigned char character) {
+    return std::ranges::any_of(OPERATORS, [character](const auto& token) {
+        return !token.first.empty() && static_cast<unsigned char>(token.first[0]) == character;
+    });
+}
+
+void Lexer::lex_operator() {
+    auto last_valid_match = OPERATORS.end();
+    const std::string_view remaining_input = std::string_view(input).substr(input_pos);
+    for (size_t op_len = 1; op_len <= remaining_input.length(); op_len++) {
+        std::string_view op = remaining_input.substr(0, op_len);
+        auto match = std::ranges::find_if(OPERATORS, [op](const auto& token) {
+            return token.first == op;
+        });
+        if (match != OPERATORS.end()) last_valid_match = match;
+        const bool any_prefix = std::ranges::any_of(OPERATORS, [op](const auto& token) {
+            return std::string_view(token.first).starts_with(op);
+        });
+        if (!any_prefix) break;
+    }
+    assert(last_valid_match != OPERATORS.end() && "lex_operator called at non-operator position");
+    current_token_type = last_valid_match->second;
+    current_word = last_valid_match->first;
+    input_pos += current_word.length();
+    submit_token();
+}
+
+bool Lexer::can_start_ident(const unsigned char given_character) {
+    return std::isalpha(given_character) || given_character == '_';
+}
+
+bool Lexer::is_ident_char(const unsigned char given_character) {
+    return std::isalnum(given_character) || given_character == '_';
+}
+
+void Lexer::check_keyword() {
+    const auto& keyword_type = KEYWORDS.find(current_word);
+    if (keyword_type == KEYWORDS.end()) return;
+    current_token_type = keyword_type->second;
+}
+
+void Lexer::lex_ident() {
+    current_token_type = TokenType::IDENTIFIER;
+    while (is_ident_char(character)) {
+        current_word.push_back(static_cast<char>(character));
+        next_character();
+    }
+    check_keyword();
+    submit_token();
+}
+
+void Lexer::lex_number() {
+    current_token_type = TokenType::INT;
+    while (std::isdigit(character) || character == '.') {
+        if (character == '.') current_token_type = TokenType::FLOAT;
+        current_word.push_back(static_cast<char>(character));
+        next_character();
+    }
+    submit_token();
+}
+
+std::optional<TokenType> Lexer::starts_pattern(const unsigned char given_character) {
+    if (given_character == '\"') return TokenType::STR_LIT;
+    if (given_character == '\'') return TokenType::CHAR_LIT;
+    if (std::isdigit(given_character)) return TokenType::INT;
+    if (std::isalpha(given_character) || given_character == '_') return TokenType::IDENTIFIER;
+    return std::nullopt;
+}
+
+bool Lexer::ends_pattern(const unsigned char given_character) const {
+    if (current_token_type == TokenType::STR_LIT && given_character == '\"') return true;
+    if (current_token_type == TokenType::CHAR_LIT && given_character == '\'') return true;
+    if (current_token_type == TokenType::INT && !isdigit(given_character)) return true;
+    if (current_token_type == TokenType::IDENTIFIER && !is_ident_char(given_character)) return true;
+    return false;
 }
 
 void error_at(const char character, const size_t line, const size_t column) {
@@ -95,62 +110,28 @@ void error_at(const char character, const size_t line, const size_t column) {
         std::to_string(line) + std::string(":") + std::to_string(column));
 }
 
-std::vector<Token> Lexer::tokenise() {
-    size_t x = 0;
-    while (x < input.length()) {
-        const char character = input[x];
-        column++;
-        if (is_operator_char(character)) {
-            new_word();
-            const auto& op = get_operator(x);
-            if (op == std::nullopt) error_at(character, line, column);
-            tokens.push_back(op.value());
-            column += op.value().value.length();
-            x += op.value().value.length();
-            continue;
+void Lexer::tokenise() {
+    while (input_pos < input.length()) {
+        if (current_token_type == TokenType::UNKNOWN) {
+            if (starts_operator(character)) {
+                lex_operator();
+                continue;
+            }
+            if (can_start_ident(character)) {
+                lex_ident();
+                continue;
+            }
+            if (std::isdigit(character)) {
+                lex_number();
+                continue;
+            }
+            if (std::isspace(character) || character == '\n') {
+                next_character();
+                continue;
+            }
         }
-        x++;
-        if (character == '\n') {
-            line++;
-            column = 0;
-            continue;
-        }
-        if (std::isspace(character)) {
-            new_word();
-            continue;
-        }
-        if (character == ';') {
-            new_word();
-            tokens.emplace_back(TokenType::SEMI_COLON, std::string(1, character));
-            continue;
-        }
-        if (current_word.empty() ? can_start_ident(character) :
-            current_token_type == TokenType::IDENTIFIER && is_ident_char(character)) {
-            current_token_type = TokenType::IDENTIFIER;
-            current_word.push_back(character);
-            continue;
-        }
-        if (isdigit(character)) {
-            if (!current_word.empty() && !isdigit(current_word.back())) new_word();
-            current_token_type = TokenType::NUM;
-            current_word.push_back(character);
-            continue;
-        }
-        if (character == '(') {
-            new_word();
-            tokens.emplace_back(TokenType::LEFT_PARENTHESIS, std::string(1, character));
-            continue;
-        }
-        if (character == ')') {
-            new_word();
-            tokens.emplace_back(TokenType::RIGHT_PARENTHESIS, std::string(1, character));
-            continue;
-        }
-        error_at(character, line, column);
-
     }
     if (!current_word.empty()) tokens.emplace_back(current_token_type, current_word);
-    return tokens;
 }
 
 std::vector<Token> Lexer::get_tokens() {

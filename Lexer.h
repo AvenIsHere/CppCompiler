@@ -15,40 +15,50 @@ class Lexer {
 
 public:
 
-    explicit Lexer(const std::string &input_string);
+    explicit Lexer(std::string input_string);
+
+    void tokenise();
     std::vector<Token> get_tokens();
 
 private:
 
-    const static inline std::vector<Token> KEYWORDS = {
-        #define KEYWORD_DEF(str, token, cat) {TokenType::token, str},
+    const static inline std::unordered_map<std::string, TokenType> KEYWORDS = {
+        #define KEYWORD_DEF(str, token, cat) {str, TokenType::token},
         KEYWORD_LIST
         #undef KEYWORD_DEF
     };
 
-    const static inline std::vector<Token> OPERATORS = {
-        #define OPERATOR_DEF(str, token, cat) {TokenType::token, str},
+    const static inline std::unordered_map<std::string, TokenType> OPERATORS = {
+        #define OPERATOR_DEF(str, token, cat) {str, TokenType::token},
         OPERATOR_LIST
         #undef OPERATOR_DEF
     };
 
-    const static inline std::vector<std::vector<Token>> SPECIFIC_TOKENS = {
-        KEYWORDS,
-        OPERATORS
+    const static inline std::unordered_map<std::string, TokenType> PUNCTUATION = {
+        #define PUNCT_DEF(str, token, cat) {str, TokenType::token},
+        PUNCT_LIST
+        #undef PUNCT_DEF
     };
 
-    static bool can_start_ident(char given_char);
-    static bool is_ident_char(char given_char);
-    static bool is_ident(const std::string &word);
+    void next_character();
+    void submit_token();
 
-    static bool is_token_type(const std::vector<Token>& token_vec, TokenType type);
-    static std::optional<TokenType> is_specific_token(const std::vector<Token>& token_vec, const std::string &word);
-    static std::vector<Token> get_possible_tokens(const std::vector<Token>& token_vec, const std::string &word);
+    [[nodiscard]] static bool starts_operator(unsigned char character);
+    void lex_operator();
 
-    static bool is_operator_char(char given_char);
-    [[nodiscard]] std::optional<Token> get_operator(size_t pos) const;
+    [[nodiscard]] static bool can_start_ident(unsigned char given_character);
+    [[nodiscard]] static bool is_ident_char(unsigned char given_character);
+    void check_keyword();
+    void lex_ident();
+
+    void lex_number();
+
+    static std::optional<TokenType> starts_pattern(unsigned char given_character);
+    [[nodiscard]] bool ends_pattern(unsigned char given_character) const;
 
     std::string input;
+    size_t input_pos;
+    unsigned char character;
 
     std::vector<Token> tokens;
     std::string current_word;
@@ -56,12 +66,6 @@ private:
 
     size_t line;
     size_t column;
-
-    void new_word();
-
-    std::vector<Token> tokenise();
-
-
 
 };
 

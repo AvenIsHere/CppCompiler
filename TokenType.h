@@ -71,7 +71,8 @@
     OPERATOR_DEF("::", OP_SCOPE_RESOLUTION, OP_ACCESS)
 
 #define PATTERN_LIST \
-    PATTERN_DEF(NUM, LITERAL) \
+    PATTERN_DEF(INT, LITERAL) \
+    PATTERN_DEF(FLOAT, LITERAL) \
     PATTERN_DEF(STR_LIT, LITERAL) \
     PATTERN_DEF(CHAR_LIT, LITERAL) \
     PATTERN_DEF(IDENTIFIER, IDENTIFIER)
@@ -94,6 +95,7 @@ enum class TokenCategory {
 };
 
 enum class TokenType {
+    UNKNOWN,
     #define PATTERN_DEF(token, cat) token,
     PATTERN_LIST
     #undef PATTERN_DEF
