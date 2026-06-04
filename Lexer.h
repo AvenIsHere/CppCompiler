@@ -53,6 +53,10 @@ private:
 
     void lex_number();
 
+    char get_escaped_char();
+    void lex_string_literal();
+    void lex_char_literal();
+
     static std::optional<TokenType> starts_pattern(unsigned char given_character);
     [[nodiscard]] bool ends_pattern(unsigned char given_character) const;
 
