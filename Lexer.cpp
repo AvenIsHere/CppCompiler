@@ -11,18 +11,23 @@
 #include <utility>
 
 Lexer::Lexer(std::string input_string) : input(std::move(input_string)), input_pos(0), current_token_type(TokenType::UNKNOWN), line(1), column(1) {
-    character = static_cast<unsigned char>(input[0]);
+    character = input.empty() ? 0 : static_cast<unsigned char>(input[0]);
     tokenise();
 }
 
 void Lexer::next_character() {
-    input_pos++;
-    column++;
+    if (input_pos >= input.length()) {
+        character = 0;
+        return;
+    }
     if (character == '\n') {
         column = 1;
         line++;
+    } else {
+        column++;
     }
-    character = static_cast<unsigned char>(input[input_pos]);
+    input_pos++;
+    character = (input_pos < input.length()) ? static_cast<unsigned char>(input[input_pos]) : 0;
 }
 
 void Lexer::submit_token() {
@@ -54,7 +59,7 @@ void Lexer::lex_operator() {
     assert(last_valid_match != OPERATORS.end() && "lex_operator called at non-operator position");
     current_token_type = last_valid_match->second;
     current_word = last_valid_match->first;
-    for (size_t i = 0; i < last_valid_match->first.length(); i++) next_character();
+    for (size_t i = 0; i < current_word.length(); i++) next_character();
     submit_token();
 }
 
@@ -130,7 +135,7 @@ char Lexer::get_escaped_char() {
 void Lexer::lex_string_literal() {
     current_token_type = TokenType::STR_LIT;
     next_character();
-    while (!ends_pattern(character)) {
+    while (character != 0 && !ends_pattern(character)) {
         if (character == '\\') {
             const auto push_char = get_escaped_char();
             current_word.push_back(push_char);
@@ -140,6 +145,7 @@ void Lexer::lex_string_literal() {
         current_word.push_back(static_cast<char>(character));
         next_character();
     }
+    if (character == 0) throw std::runtime_error(std::format("Unterminated string literal at {}:{}", line, column));
     next_character();
     submit_token();
 }
@@ -147,11 +153,12 @@ void Lexer::lex_string_literal() {
 void Lexer::lex_char_literal() {
     current_token_type = TokenType::CHAR_LIT;
     next_character();
+    if (character == 0) throw std::runtime_error(std::format("Unterminated character literal at {}:{}", line, column));
     auto final_char = character;
     if (character == '\\') final_char = get_escaped_char();
     current_word.push_back(static_cast<char>(final_char));
     next_character();
-    if (!ends_pattern(character)) throw std::runtime_error(std::format("multi character literal at {}:{}", line, column));
+    if (character == 0 || !ends_pattern(character)) throw std::runtime_error(std::format("Invalid character literal at {}:{}", line, column));
     next_character();
     submit_token();
 }
@@ -180,13 +187,14 @@ void error_at(const unsigned char character, const size_t line, const size_t col
 
 void Lexer::tokenise() {
     while (input_pos < input.length()) {
+        if (character == 0) break;
         if (current_token_type == TokenType::UNKNOWN) {
-            if (starts_operator(character)) {
-                lex_operator();
-                continue;
-            }
             if (std::isspace(character)) {
                 next_character();
+                continue;
+            }
+            if (starts_operator(character)) {
+                lex_operator();
                 continue;
             }
             if (const auto char_str = std::string(1, static_cast<char>(character)); PUNCTUATION.contains(char_str)) {

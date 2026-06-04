@@ -13,3 +13,14 @@ add_executable(CppCompiler main.cpp
         Token.cpp
         Token.h
         TokenType.h)
+
+add_executable(Tests tests.cpp
+        Lexer.cpp
+        Lexer.h
+        CompilerProgram.cpp
+        CompilerProgram.h
+        Parser.cpp
+        Parser.h
+        Token.cpp
+        Token.h
+        TokenType.h)
