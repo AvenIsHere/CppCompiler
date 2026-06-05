@@ -50,19 +50,19 @@ int main() {
     // Full function
     test_lexer("Full function", "void main() { int x = 5; printf(\"%s\", x); }");
 
-    // 7. Lost characters in operators
+    // Lost characters in operators
     test_lexer("Lost characters", "+-");
 
-    // 8. Char literals
+    // Char literals
     test_lexer("Empty char literal", "''");
     test_lexer("Triple quote char literal", "'''");
     test_lexer("Valid char literal", "'a'");
     test_lexer("Escaped char literal", "'\\''");
 
-    // 9. Floating point starting with dot
+    // Floating point starting with dot
     test_lexer("Floating point with dot", ".5");
 
-    // 10. Comments
+    // Comments
     test_lexer("Single line comment", "int x; // comment\nint y;");
     test_lexer("Multi-line comment", "int x; /* comment */ int y;");
 

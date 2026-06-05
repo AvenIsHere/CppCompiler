@@ -12,7 +12,10 @@ add_executable(CppCompiler main.cpp
         Parser.h
         Token.cpp
         Token.h
-        TokenType.h)
+        TokenType.h
+        Preprocessor.cpp
+        Preprocessor.h
+)
 
 add_executable(Tests tests.cpp
         Lexer.cpp
@@ -23,4 +26,7 @@ add_executable(Tests tests.cpp
         Parser.h
         Token.cpp
         Token.h
-        TokenType.h)
+        TokenType.h
+        Preprocessor.cpp
+        Preprocessor.h
+)
