@@ -17,7 +17,7 @@ add_executable(CppCompiler main.cpp
         Preprocessor.h
 )
 
-add_executable(Tests tests.cpp
+add_executable(Tests lexer_tests.cpp
         Lexer.cpp
         Lexer.h
         CompilerProgram.cpp

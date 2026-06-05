@@ -11,6 +11,7 @@
 
 #include "Token.h"
 #include "Lexer.h"
+#include "Preprocessor.h"
 
 CompilerProgram::CompilerProgram(std::vector<std::string> args_flags) {
 
@@ -110,6 +111,8 @@ int CompilerProgram::run() const {
             break;
         }
     }
+
+    input = Preprocessor(input, mode == FILE ? std::filesystem::path(args[0]) : std::filesystem::current_path() / "main.cpp", {}).process();
 
     auto tokeniser = Lexer(input);
     std::vector<Token> output = tokeniser.get_tokens();
