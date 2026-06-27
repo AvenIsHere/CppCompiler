@@ -13,4 +13,6 @@ add_executable(CppCompiler main.cpp
         Token.cpp
         Token.h
         TokenType.h
+        Preprocessor.cpp
+        Preprocessor.h
 )

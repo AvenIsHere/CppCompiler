@@ -84,10 +84,10 @@ void Lexer::lex_ident() {
 void Lexer::lex_number() {
     current_token_type = TokenType::INT;
     while (!ends_pattern(character)) {
+        if (character == '.' && current_token_type == TokenType::FLOAT) {
+            throw std::runtime_error(std::format("Invalid number at {}:{}", line, column));
+        }
         if (character == '.') {
-            if (current_token_type == TokenType::FLOAT) {
-                throw std::runtime_error(std::format("Invalid number at {}:{}", line, column));
-            }
             current_token_type = TokenType::FLOAT;
         }
         current_word.push_back(static_cast<char>(character));
@@ -194,22 +194,12 @@ bool Lexer::skip_comment() {
     }
 
     if (input[input_pos + 1] == '*') {
-        bool closed = false;
-        next_character(); // /
-        next_character(); // *
-        while (character != 0) {
-            if (character == '*') {
-                next_character();
-                if (character == '/') {
-                    next_character();
-                    closed = true;
-                    break;
-                }
-                continue;
-            }
-            next_character();
-        }
-        if (!closed) throw std::runtime_error(std::format("Unterminated multi-line comment at {}:{}", line, column));
+        size_t comment_line = line;
+        size_t comment_column = column;
+        next_character(); next_character();
+        while (character != '\0' && (character != '*' || input[input_pos + 1] != '/')) next_character();
+        if (character == '\0') throw std::runtime_error(std::format("Multi-line comment not closed at {}:{}", comment_line, comment_column));
+        next_character(); next_character();
         return true;
     }
 
