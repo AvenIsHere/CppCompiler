@@ -218,7 +218,7 @@ bool Lexer::lex_punctuation() {
     return false;
 }
 
-void Lexer::tokenise() {
+std::vector<Token> Lexer::tokenise() {
     while (input_pos < input.length() && character != 0) {
         if (std::isspace(character)) {
             next_character();
@@ -240,6 +240,7 @@ void Lexer::tokenise() {
 
         error_at(character, line, column);
     }
+    return tokens;
 }
 
 std::vector<Token> Lexer::get_tokens() {

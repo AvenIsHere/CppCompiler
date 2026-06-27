@@ -3,3 +3,6 @@
 //
 
 #include "Parser.h"
+
+Parser::Parser(std::vector<Token> given_tokens) : tokens(std::move(given_tokens)) {
+}

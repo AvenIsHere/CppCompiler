@@ -4,6 +4,7 @@
 
 #ifndef CPPCOMPILER_PREPROCESSOR_H
 #define CPPCOMPILER_PREPROCESSOR_H
+#include <filesystem>
 #include <string>
 
 enum class PreprocessorState {
@@ -27,10 +28,11 @@ class Preprocessor {
 
     std::string input;
     PreprocessorState state;
+    std::filesystem::path file_path;
 
 public:
 
-    Preprocessor(std::string given_input);
+    Preprocessor(std::string given_input, std::filesystem::path given_file_path);
 
     std::string process();
 

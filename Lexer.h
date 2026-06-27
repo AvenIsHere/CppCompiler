@@ -18,7 +18,7 @@ public:
 
     explicit Lexer(std::string input_string);
 
-    void tokenise();
+    std::vector<Token> tokenise();
     std::vector<Token> get_tokens();
 
 private:

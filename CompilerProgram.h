@@ -36,7 +36,7 @@ public:
     bool debug_mode = false;
 
     static bool is_double_flag(const std::string &given_flag);
-    int handle_flag(const std::string &given_flag);
+    void handle_flag(const std::string &given_flag);
     static bool is_flag(const std::string &arg);
 
     int run() const;

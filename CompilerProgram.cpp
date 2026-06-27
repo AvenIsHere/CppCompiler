@@ -12,6 +12,8 @@
 
 #include "Token.h"
 #include "Lexer.h"
+#include "Parser.h"
+#include "Preprocessor.h"
 
 CompilerProgram::CompilerProgram(std::vector<std::string> args_flags) {
 
@@ -42,12 +44,12 @@ bool CompilerProgram::is_double_flag(const std::string &given_flag) {
     return false;
 }
 
-int CompilerProgram::handle_flag(const std::string &given_flag) {
+void CompilerProgram::handle_flag(const std::string &given_flag) {
     if (given_flag.starts_with("--")) {
         const auto flag_content = given_flag.substr(2);
         if (FLAGS.contains(flag_content)) {
             FLAGS.at(flag_content)();
-            return 0;
+            return;
         }
         std::cerr << "unknown flag \"--" << flag_content << "\"" << std::endl;
         throw std::runtime_error("unknown flag: --" + flag_content);
@@ -62,7 +64,7 @@ int CompilerProgram::handle_flag(const std::string &given_flag) {
         }
         unknown_flags.push_back(character);
     }
-    if (unknown_flags.empty()) return 0;
+    if (unknown_flags.empty()) return;
     std::cerr << "unknown flag(s) \"" << unknown_flags << "\"" << std::endl;
     std::cerr << "Allowed flags: ";
     for (const auto &flag: SHORT_FLAGS | std::views::keys) std::cerr << "-" << flag << ", ";
@@ -76,7 +78,7 @@ bool CompilerProgram::is_flag(const std::string &arg) {
     return arg.starts_with("-");
 }
 
-std::string file_to_string(std::fstream& file) {
+std::string file_to_string(const std::fstream& file) {
     std::ostringstream file_stream;
     file_stream << file.rdbuf();
     return file_stream.str();
@@ -112,16 +114,20 @@ int CompilerProgram::run() const {
         }
     }
 
-    input = Preprocessor(input, mode == FILE ? std::filesystem::path(args[0]) : std::filesystem::current_path() / "main.cpp", {}).process();
+    input = Preprocessor(input, mode == FILE ? std::filesystem::path(args[0]) : std::filesystem::current_path() / "main.cpp").process();
 
-    auto tokeniser = Lexer(input);
-    std::vector<Token> output = tokeniser.get_tokens();
+    auto lexer = Lexer(input);
+    std::vector<Token> tokens = lexer.get_tokens();
 
     if (debug_mode) {
-        for (const auto&[token, value] : output) {
+        std::cout << "--- TOKENS ---" << std::endl;
+        for (const auto&[token, value] : tokens) {
             std::cout << "{" << Token::type_to_string(token) << ", \"" << value << "\"}" << std::endl;
         }
+        std::cout << "--- END OF TOKENS ---" << std::endl;
     }
+
+    auto parser = Parser(tokens);
 
     return 0;
 }

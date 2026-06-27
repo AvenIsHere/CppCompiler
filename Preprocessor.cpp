@@ -4,10 +4,9 @@
 
 #include "Preprocessor.h"
 
-#include <sstream>
 #include <utility>
 
-Preprocessor::Preprocessor(std::string given_input) : input(std::move(given_input)), state(PreprocessorState::NONE) {}
+Preprocessor::Preprocessor(std::string given_input, std::filesystem::path given_file_path) : input(std::move(given_input)), state(PreprocessorState::NONE), file_path(std::move(given_file_path)) {}
 
 std::string Preprocessor::process() {
 
@@ -20,7 +19,7 @@ std::string Preprocessor::process() {
     char character = input.at(index);
 
     while (character != '\0') {
-        
+
 
         index++;
         character = input.at(index);
